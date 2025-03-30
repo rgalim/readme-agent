@@ -87,3 +87,5 @@ prof/
 *.rar
 *.7z
 *.bak
+
+.temp
