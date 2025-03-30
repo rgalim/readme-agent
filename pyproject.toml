@@ -4,7 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "readme-agent"
-version = "0.0.1"
+version = "0.0.2"
 description = "AI agent that creates a README file for a GitHub repo"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "PyGithub>=2.6.1",
+    "GitPython>=3.1.44"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3.0"
+]
