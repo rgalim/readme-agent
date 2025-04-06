@@ -1,9 +1,11 @@
 import logging
 
-from src.github.repo_manager import clone_repo, create_temp_directory
-from src.llm.file_analyzer import count_tokens
+from src.github.repo_manager import clone_repo, create_temp_directory, create_readme
+from src.llm.prompt_manager import count_tokens, create_prompt
 from src.scanner.file_scanner import select_essential_files, merge_files
-from src.llm.config import MODEL_NAME, INPUT_TOKEN_LIMIT
+from src.llm.config import MODEL_NAME, INPUT_TOKEN_LIMIT, TEMPERATURE
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -12,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 def run():
     repository_url = ""
     access_token = ""
+    openai_api_key = ""
 
     # 1. Create temp directory
     temp_directory = create_temp_directory()
@@ -34,8 +37,14 @@ def run():
         raise Exception("Prompt exceeds token limit")
 
     # 6. Create a prompt
+    prompt = create_prompt(merged_content)
+
     # 7. Send prompt to LLM
+    llm = ChatOpenAI(model=MODEL_NAME, temperature=TEMPERATURE, api_key=openai_api_key)
+    response = llm.invoke([HumanMessage(content=prompt)])
+
     # 8. Create a readme file
+    create_readme(response.content, temp_directory)
 
 
 if __name__ == '__main__':
