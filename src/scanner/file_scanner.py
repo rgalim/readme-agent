@@ -8,24 +8,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 def select_essential_files(repo_path: str) -> list:
-    """
-    Traverses the given repository directory and returns a list of file paths that are essential
-    for analyzing a Java Spring Boot project for the purpose of creating a README file.
-
-    Essential files include:
-      - Build configuration files: pom.xml, build.gradle, build.gradle.kts.
-      - Configuration files: application.properties, application.yml (typically in src/main/resources).
-      - Docker-related files: Dockerfile, docker-compose.yml.
-      - Documentation or meta files: LICENSE, CHANGELOG.md, CONTRIBUTING.md.
-      - All .java files for detailed context about what the application is doing.
-
-    Args:
-        repo_path (str): The file system path to the local project repository.
-
-    Returns:
-        list: A list of absolute paths to the selected files.
-    """
-
     essential_files = set()
 
     for root, dirs, files in os.walk(repo_path):
@@ -44,7 +26,7 @@ def select_essential_files(repo_path: str) -> list:
             if file in EXTRA_FILES:
                 essential_files.add(file_path)
 
-            if file.endswith(".java"):
+            if file.endswith(".java") and not file.endswith("Test.java"):
                 essential_files.add(file_path)
 
     return sorted(essential_files)
