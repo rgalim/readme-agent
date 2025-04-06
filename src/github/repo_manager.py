@@ -34,5 +34,15 @@ def clone_repo(repo_url: str, target_dir: str, token: str = None) -> None:
         raise
 
 
+def create_readme(content: str, target_dir: str) -> None:
+    try:
+        file_path = os.path.join(target_dir, "README.md")
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(content)
+        logger.info("README.md file created successfully.")
+    except Exception as e:
+        logger.error(f"Error creating README: {e}")
+
+
 def _modify_url(url: str, token: str) -> str:
     return f"{HTTPS_PREFIX}{token}@{url[len(HTTPS_PREFIX):]}"

@@ -4,13 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "readme-agent"
-version = "0.0.2"
+version = "0.1.0"
 description = "AI agent that creates a README file for a GitHub repo"
 requires-python = ">=3.12"
 dependencies = [
     "PyGithub>=2.6.1",
     "GitPython>=3.1.44",
-    "tiktoken>=0.9.0"
+    "tiktoken>=0.9.0",
+    "langchain>=0.3",
+    "langchain-openai>=0.3.12"
 ]
 
 [project.optional-dependencies]
