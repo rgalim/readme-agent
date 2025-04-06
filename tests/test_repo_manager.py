@@ -3,7 +3,21 @@ import shutil
 import pytest
 from git import GitCommandError
 
-from src.github.repo_manager import create_temp_directory, clone_repo
+from src.github.repo_manager import create_temp_directory, clone_repo, create_readme
+
+
+class MockFile:
+    def __init__(self):
+        self.content = ""
+
+    def write(self, s):
+        self.content += s
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 
 def test_create_temp_directory():
@@ -64,6 +78,41 @@ def test_clone_repository_failure(monkeypatch):
 
     with pytest.raises(GitCommandError):
         clone_repo(repo_url, target_dir, token=token)
+
+
+def test_create_readme_success(monkeypatch):
+    files_written = {}
+
+    def mock_open(path, mode, encoding):
+        mock_file = MockFile()
+        files_written[path] = mock_file
+        return mock_file
+
+    monkeypatch.setattr("builtins.open", mock_open)
+
+    target_dir = "/mock_dir"
+    content = "This is a test README content."
+
+    create_readme(content, target_dir)
+
+    expected_path = os.path.join(target_dir, "README.md")
+
+    assert expected_path in files_written
+    assert files_written[expected_path].content == content
+
+
+def test_create_readme_failure(monkeypatch, caplog):
+    def mock_open_fail(path, mode, encoding):
+        raise Exception("Simulated file write error")
+
+    monkeypatch.setattr("builtins.open", mock_open_fail)
+
+    target_dir = "/fake_dir"
+    content = "This is a test README content."
+
+    create_readme(content, target_dir)
+
+    assert "Error creating README:" in caplog.text
 
 
 def _clone_from_recorder(url, target_dir):
