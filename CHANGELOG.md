@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.0] - 2025-04-06
+- Move logic to langgraph
+
 ## [0.1.0] - 2025-04-06
 - Implement integration with llm
 
