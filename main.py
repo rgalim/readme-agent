@@ -1,51 +1,45 @@
-import logging
+import argparse
 
-from src.github.repo_manager import clone_repo, create_temp_directory, create_readme
-from src.llm.prompt_manager import count_tokens, create_prompt
-from src.scanner.file_scanner import select_essential_files, merge_files
-from src.llm.config import MODEL_NAME, INPUT_TOKEN_LIMIT, TEMPERATURE
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from langgraph.graph import StateGraph, START, END
+from agent.nodes import AgentState, clone_repo_node, select_essential_files_node, readme_body_node, readme_file_node
 
 
-def run():
-    repository_url = ""
-    access_token = ""
-    openai_api_key = ""
+def build_graph():
+    graph_builder = StateGraph(AgentState)
 
-    # 1. Create temp directory
-    temp_directory = create_temp_directory()
+    graph_builder.add_node("clone_repo_node", clone_repo_node)
+    graph_builder.add_node("select_essential_files_node", select_essential_files_node)
+    graph_builder.add_node("readme_body_node", readme_body_node)
+    graph_builder.add_node("readme_file_node", readme_file_node)
 
-    # 2. Clone repo from provided url
-    clone_repo(repository_url, temp_directory, token=access_token)
+    graph_builder.add_edge(START, "clone_repo_node")
+    graph_builder.add_edge("clone_repo_node", "select_essential_files_node")
+    graph_builder.add_edge("select_essential_files_node", "readme_body_node")
+    graph_builder.add_edge("readme_body_node", "readme_file_node")
+    graph_builder.add_edge("readme_file_node", END)
 
-    # 3. Select essential project files (only java is supported)
-    files = select_essential_files(temp_directory)
+    return graph_builder.compile()
 
-    # 4. Merge all files content
-    merged_content = merge_files(files)
 
-    # 5. Calculate tokens
-    token_count = count_tokens(text=merged_content, model_name=MODEL_NAME)
-    logger.info(f"NUMBER OF TOKENS: {token_count}")
+def get_repo_url():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", required=True, help="URL of the github repo")
+    return parser.parse_args().url
 
-    if token_count > INPUT_TOKEN_LIMIT:
-        logger.info(f"Prompt exceeds token limit: {token_count}")
-        raise Exception("Prompt exceeds token limit")
 
-    # 6. Create a prompt
-    prompt = create_prompt(merged_content)
+def run_agent():
+    initial_state = AgentState(
+        repo_url=get_repo_url(),
+        temp_directory_path="",
+        file_paths=[],
+        essential_file_names=[],
+        readme_body=""
+    )
 
-    # 7. Send prompt to LLM
-    llm = ChatOpenAI(model=MODEL_NAME, temperature=TEMPERATURE, api_key=openai_api_key)
-    response = llm.invoke([HumanMessage(content=prompt)])
+    graph = build_graph()
 
-    # 8. Create a readme file
-    create_readme(response.content, temp_directory)
+    graph.invoke(initial_state)
 
 
 if __name__ == '__main__':
-    run()
+    run_agent()
