@@ -488,3 +488,22 @@ class TestExtractFileNames:
         result = extract_file_names(input_str)
 
         assert result == expected
+
+    def test_another_format_llm_response(self):
+        """Test with another llm response format list"""
+        input_str = """
+            To write a comprehensive README file, the following files would provide the most useful information:
+
+            ```json
+            [
+                "file1.txt",
+                "file2.doc",
+            ]
+            ```
+            These files are likely to contain the main application logic, configuration settings, and change history.
+        """
+        expected = ["file1.txt", "file2.doc"]
+
+        result = extract_file_names(input_str)
+
+        assert result == expected
