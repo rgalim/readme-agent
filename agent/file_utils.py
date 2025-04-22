@@ -115,13 +115,23 @@ def extract_file_names(string_input) -> list:
     :param string_input: LLM response
     :return: list of essential file names
     """
-    # Extract the content between square brackets
-    match = re.search(r'\[(.*?)\]', string_input)
-    if not match:
-        return []
-    json_content = "[" + match.group(1) + "]"
+    # Try to extract the JSON array inside a ```json … ``` code fence
+    fence_pattern = r'```json\s*([\s\S]*?\])\s*```'
+    match = re.search(fence_pattern, string_input, re.IGNORECASE)
+    if match:
+        raw_json = match.group(1)
+    else:
+        # Fallback: grab the first [ … ] block anywhere (DOTALL to span lines)
+        bracket_pattern = r'(\[[\s\S]*?\])'
+        match = re.search(bracket_pattern, string_input)
+        if not match:
+            return []
+        raw_json = match.group(1)
+
+    # Remove any trailing commas before closing ] or }
+    raw_json = re.sub(r',\s*(?=[\]\}])', '', raw_json)
     try:
-        return json.loads(json_content)
+        return json.loads(raw_json)
     except json.JSONDecodeError as e:
         logger.error(f"Error parsing file names: {e}")
         return []

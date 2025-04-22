@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.2] - 2025-04-22
+- Fix file name extraction 
+
 ## [0.2.1] - 2025-04-21
 - Add readme file
 
